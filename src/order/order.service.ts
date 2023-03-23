@@ -4,15 +4,19 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { Model } from 'mongoose';
+import { stringify } from 'querystring';
 
 @Injectable()
 export class OrderService {
   constructor(@InjectModel(Order.name) private orderModel: Model<OrderDocument>) {}
 
-  create(createOrderDto: CreateOrderDto) {
+  async create(createOrderDto: CreateOrderDto) {
 
-    const createOrder = new this.orderModel(createOrderDto);
-    return createOrder.save();
+    const createOrder = await new this.orderModel(createOrderDto).save();
+
+    const updatedOrder = await this.orderModel.findByIdAndUpdate(createOrder._id.toString(), {order_unique_id: createOrder._id.toString()}, {new: true}).populate('currency_type_id')
+    
+    return updatedOrder;
   }
 
   findAll() {
@@ -20,11 +24,11 @@ export class OrderService {
   }
   
   findOne(id: string) {
-    return this.orderModel.findById(id);
+    return this.orderModel.findById(id).populate('currency_type_id');
   }
 
   update(id: string, updateOrderDto: UpdateOrderDto) {
-    return this.orderModel.findByIdAndUpdate(id, updateOrderDto, {new: true});
+    return this.orderModel.findByIdAndUpdate(id, updateOrderDto, {new: true}).populate('currency_type_id');
   }
 
   remove(id: string) {

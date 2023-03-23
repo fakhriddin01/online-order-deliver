@@ -23,10 +23,10 @@ export class Admin {
   @Prop()
   tg_link: string;
 
-  @Prop()
+  @Prop({default: false})
   is_creator: boolean;
 
-  @Prop()
+  @Prop({default: true})
   is_active: boolean;
 
   @Prop()
