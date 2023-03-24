@@ -48,15 +48,19 @@ export class AdminService {
     const {username, password} = singinAdminDto
 
     const admin = await this.adminModel.findOne({username})
-      
+    
     if(!admin){
       throw new BadRequestException("Admin not found")
+    }
+    if(!admin.is_active){
+      throw new UnauthorizedException("This admin is not active")
     }
     const varify = await bcrypt.compare(password, admin.hashed_password);
     if(!varify){
       throw new UnauthorizedException("Username or password not correct")
 
-    }    
+    }
+
     
     const tokens = await this.generateToken(admin);
     const hashed_token = await bcrypt.hash(tokens.refresh_token, 7);
