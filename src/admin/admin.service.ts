@@ -8,6 +8,8 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { SigninAdminDto } from './dto/signin-admin.dto';
 import { Response } from 'express';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { ActivateAdminDto } from './dto/activate-admin.dto';
 
 @Injectable()
 export class AdminService {
@@ -97,6 +99,67 @@ export class AdminService {
       updatedAdmin
     };
     return response;
+  }
+
+  async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
+    const admin = await this.adminModel.findById(id);
+
+    if(!admin){
+      throw new BadRequestException('admin not found')
+    }
+
+    const isCorrect = await bcrypt.compare(updatePasswordDto.old_password, admin.hashed_password);
+    if(!isCorrect){
+      throw new BadRequestException('Password not correct')
+    }
+
+    if(updatePasswordDto.new_password !== updatePasswordDto.verify_new_password){
+      throw new BadRequestException('newpassword and varification not match')
+    }
+
+    const hashed_password = await bcrypt.hash(updatePasswordDto.new_password, 7);
+
+    const updatedAdmin = await this.adminModel.findByIdAndUpdate(id, {hashed_password}, {new: true})
+
+    return {
+      message: "password updted",
+      updatedAdmin
+    }
+  }
+
+  async activateAdmin(activateAdminDto: ActivateAdminDto){
+    const admin = await this.adminModel.findById(activateAdminDto.admin_id);
+    if(!admin){
+      throw new BadRequestException('admin not found')
+    }
+    if(admin.is_active){
+      throw new BadRequestException('admin already active');
+    }
+    const updatedAdmin = await this.adminModel.findByIdAndUpdate(activateAdminDto.admin_id, {is_active: true}, {new: true});
+
+    return {
+      message: "admin status activated",
+      updatedAdmin
+    }
+  }
+
+  async deactivateAdmin(activateAdminDto: ActivateAdminDto){
+    const admin = await this.adminModel.findById(activateAdminDto.admin_id);
+    if(!admin){
+      throw new BadRequestException('admin not found')
+    }
+    if(!admin.is_active){
+      throw new BadRequestException('admin already deactivated');
+    }
+    if(admin.is_creator){
+      throw new BadRequestException('you can not deactivate this admin');
+    }
+    const updatedAdmin = await this.adminModel.findByIdAndUpdate(activateAdminDto.admin_id, {is_active: false}, {new: true});
+
+    return {
+      message: "admin status deactivated",
+      updatedAdmin
+    }
   }
 
   async findAll(): Promise<Admin[]> {

@@ -7,6 +7,8 @@ import { CookieGetter } from '../decorators/cookieGetter.decorator';
 import { JwtGuard } from '../guards/jwt-auth.guard';
 import { IsCreator } from '../guards/is-creator.guard';
 import { AdminSelfGuard } from '../guards/user-self.guard';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { ActivateAdminDto } from './dto/activate-admin.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -51,6 +53,27 @@ export class AdminController {
   @Get('username/:username')
   findOneByUsername(@Param('username') username: string) {
     return this.adminService.findOneByUsername(username);
+  }
+
+  @UseGuards(IsCreator)
+  @UseGuards(JwtGuard)
+  @Post('activate')
+  activateAdmin(@Body() activateAdminDto: ActivateAdminDto) {
+    return this.adminService.activateAdmin(activateAdminDto);
+  }
+
+  @UseGuards(IsCreator)
+  @UseGuards(JwtGuard)
+  @Post('deactivate')
+  deactivateAdmin(@Body() activateAdminDto: ActivateAdminDto) {
+    return this.adminService.deactivateAdmin(activateAdminDto);
+  }
+
+  @UseGuards(AdminSelfGuard)
+  @UseGuards(JwtGuard)
+  @Patch('change-password/:id')
+  updatePassword(@Param('id') id: string, @Body() updatePasswordDto: UpdatePasswordDto) {
+    return this.adminService.updatePassword(id, updatePasswordDto);
   }
 
   @UseGuards(AdminSelfGuard)

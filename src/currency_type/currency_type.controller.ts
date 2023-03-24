@@ -16,7 +16,6 @@ export class CurrencyTypeController {
     return this.currencyTypeService.create(createCurrencyTypeDto);
   }
 
-  @UseGuards(IsCreator)
   @UseGuards(JwtGuard)
   @Get()
   findAll() {
